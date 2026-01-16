@@ -246,18 +246,6 @@ class UserOptions {
   static bool defaultUsePrecompiledBinaries() => !_rustupExists();
 
   static UserOptions load({required bool hasConfig}) {
-    final env =
-        Platform.environment['BDK_DART_USE_PRECOMPILED_BINARIES'] ??
-        Platform.environment['NATIVE_ASSET_EXTENSION_USE_PRECOMPILED_BINARIES'];
-    if (env != null) {
-      final v = env.trim().toLowerCase();
-      if (v == '1' || v == 'true' || v == 'yes') {
-        return UserOptions(usePrecompiledBinaries: true);
-      }
-      if (v == '0' || v == 'false' || v == 'no') {
-        return UserOptions(usePrecompiledBinaries: false);
-      }
-    }
     if (!hasConfig) {
       return UserOptions(usePrecompiledBinaries: false);
     }
@@ -274,4 +262,3 @@ PrecompiledBinaryMode? _parsePrecompiledBinaryMode(String raw) {
     _ => null,
   };
 }
-
