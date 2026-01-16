@@ -1,8 +1,10 @@
 name: Precompile Binaries
 
 on:
-  push:
-    branches: [main, "**"]
+  workflow_call:
+    secrets:
+      PRECOMPILED_PRIVATE_KEY:
+        required: true
   workflow_dispatch:
 
 permissions:

@@ -62,3 +62,11 @@ jobs:
       - name: Run tests
         run: |
           dart test
+
+  precompile-binaries:
+    needs: build-and-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/precompile_binaries.yml
+    secrets: inherit
