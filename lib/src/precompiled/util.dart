@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+// Parse hex-encoded bytes from configuration/secrets.
 List<int> decodeHex(String hex) {
   final normalized = hex.trim().toLowerCase();
   if (normalized.length.isOdd) {
@@ -16,6 +17,7 @@ List<int> decodeHex(String hex) {
   return out;
 }
 
+// Encode raw bytes as lowercase hex.
 String hexEncode(List<int> bytes) {
   final b = StringBuffer();
   for (final v in bytes) {
@@ -24,6 +26,7 @@ String hexEncode(List<int> bytes) {
   return b.toString();
 }
 
+// Retry GET requests on transient connection resets.
 Future<http.Response> httpGetWithRetry(
   Uri url, {
   Map<String, String>? headers,

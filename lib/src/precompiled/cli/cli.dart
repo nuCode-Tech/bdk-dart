@@ -6,6 +6,7 @@ import 'commands/precompile_binaries.dart' as precompile_binaries;
 import 'commands/sign.dart' as sign_cmd;
 import 'commands/targets.dart' as targets;
 
+// Entry point for the precompiled tooling CLI.
 Future<void> runCli(List<String> args) async {
   if (args.isEmpty) {
     _printUsage();

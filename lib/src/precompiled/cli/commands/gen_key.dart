@@ -1,6 +1,7 @@
 import 'package:bdk_dart/src/precompiled/util.dart';
 import 'package:ed25519_edwards/ed25519_edwards.dart';
 
+// Generate an Ed25519 keypair for signing.
 Future<void> run(List<String> args) async {
   if (args.contains('--help') || args.contains('-h')) {
     return;

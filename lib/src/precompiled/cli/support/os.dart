@@ -1,3 +1,4 @@
+// Normalize OS inputs for CLI filtering.
 String? normalizeOs(String raw) {
   final v = raw.trim().toLowerCase();
   return switch (v) {

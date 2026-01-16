@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:bdk_dart/src/precompiled/util.dart';
 import 'package:ed25519_edwards/ed25519_edwards.dart';
 
+// Sign a binary file using the PRIVATE_KEY env var.
 Future<void> run(List<String> args) async {
   if (args.length != 2 || args.contains('--help') || args.contains('-h')) {
     stderr.writeln('Usage: sign <input_file> <output_sig_file>');

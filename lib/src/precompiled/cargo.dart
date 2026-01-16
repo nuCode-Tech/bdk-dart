@@ -7,6 +7,7 @@ class CrateInfo {
 
   final String packageName;
 
+  // Extract crate package name from Cargo.toml.
   static CrateInfo load(String manifestDir) {
     final manifestFile = File(path.join(manifestDir, 'Cargo.toml'));
     final manifest = manifestFile.readAsStringSync();
@@ -33,4 +34,3 @@ class CrateInfo {
     throw StateError('Failed to determine crate name from Cargo.toml');
   }
 }
-

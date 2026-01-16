@@ -10,6 +10,7 @@ import 'package:path/path.dart' as p;
 import '../support/os.dart';
 import '../support/process.dart';
 
+// Build, sign, and upload precompiled artifacts to a GitHub release.
 Future<void> run(List<String> args) async {
   String? manifestDir;
   String? cratePackage;
@@ -20,6 +21,7 @@ Future<void> run(List<String> args) async {
   String? androidMinSdkVersion;
   var verbose = false;
 
+  // Basic argument parsing.
   for (final arg in args) {
     if (arg == '--help' || arg == '-h') {
       stdout.writeln('''
@@ -114,10 +116,12 @@ Options:
     stderr.writeln('OS filter: ${normalizedOs ?? 'all'}');
   }
 
+  // Load toolchain + derive crate hash for the release tag.
   final toolchain = RustToolchain.load(manifestPath);
   final crateHash = CrateHash.compute(manifestPath);
   final tag = 'precompiled_$crateHash';
 
+  // Signing key used for artifact verification.
   final privateKeyHex = Platform.environment['PRIVATE_KEY'];
   if (privateKeyHex == null) {
     stderr.writeln('Missing PRIVATE_KEY environment variable');
@@ -132,6 +136,7 @@ Options:
   }
   final privateKey = PrivateKey(privateKeyBytes);
 
+  // Required for GitHub release creation/upload.
   final ghToken =
       Platform.environment['GH_TOKEN'] ??
       Platform.environment['GITHUB_TOKEN'] ??
@@ -164,10 +169,12 @@ Options:
       ? targets.where((t) => abiForTarget(t) != null).toList(growable: false)
       : List<String>.from(targets);
 
+  // If release already contains assets, avoid duplicate builds.
   final releaseHasAssets = buildableTargets.isNotEmpty
       ? await _releaseHasAllAssets(tag: tag, targets: buildableTargets)
       : false;
 
+  // Local build and upload staging folders.
   final buildDir = Directory('precompiled_build');
   final uploadDir = Directory('precompiled_upload');
   final buildDirAbs = Directory(
@@ -192,6 +199,7 @@ Options:
   buildDirAbs.createSync(recursive: true);
   uploadDirAbs.createSync(recursive: true);
 
+  // Android builds use cargo-ndk with ABI mapping.
   if (normalizedOs == 'android') {
     if (androidSdkLocation == null || androidSdkLocation.trim().isEmpty) {
       stderr.writeln(
@@ -358,6 +366,7 @@ Options:
     }
   }
 
+  // Upload all artifacts for this hash.
   await runOrThrow('gh', [
     'release',
     'upload',

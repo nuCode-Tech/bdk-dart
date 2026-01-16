@@ -1,5 +1,6 @@
 import 'dart:io';
 
+// Run a process, echoing output, and throw on non-zero exit.
 Future<void> runOrThrow(
   String exe,
   List<String> args, {

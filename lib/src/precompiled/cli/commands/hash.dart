@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:bdk_dart/src/precompiled/crate_hash.dart';
 
+// Compute and print the crate hash for release tagging.
 Future<void> run(List<String> args) async {
   String? manifestDir;
   var debug = false;

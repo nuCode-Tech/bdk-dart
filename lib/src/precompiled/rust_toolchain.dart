@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:toml/toml.dart';
 
+// Parses rust-toolchain.toml and exposes channel/targets.
 class RustToolchain {
   RustToolchain._({
     required this.channel,
@@ -12,6 +13,7 @@ class RustToolchain {
   final String channel;
   final List<String> targets;
 
+  // Load rust-toolchain.toml from a crate directory.
   static RustToolchain load(String manifestDir) {
     final file = File(path.join(manifestDir, 'rust-toolchain.toml'));
     if (!file.existsSync()) {
@@ -20,6 +22,7 @@ class RustToolchain {
     return _parseToolchain(file.path);
   }
 
+  // Parse the toolchain TOML into a RustToolchain instance.
   static RustToolchain _parseToolchain(String toolchainTomlPath) {
     final doc = TomlDocument.loadSync(toolchainTomlPath).toMap();
     final toolchain = doc['toolchain'];
@@ -40,6 +43,7 @@ class RustToolchain {
     );
   }
 
+  // Filter targets for a given OS label.
   List<String> targetsForOs(String os) {
     final normalized = _normalizeOs(os);
     if (normalized == null) {
@@ -48,6 +52,7 @@ class RustToolchain {
     return _filterTargets(targets, normalized);
   }
 
+  // Normalize OS aliases used by CLI/workflows.
   static String? _normalizeOs(String raw) {
     final v = raw.trim().toLowerCase();
     return switch (v) {
@@ -61,6 +66,7 @@ class RustToolchain {
     };
   }
 
+  // Apply OS-specific target filtering.
   static List<String> _filterTargets(List<String> targets, String os) {
     bool include(String t) => switch (os) {
       'macos' => t.endsWith('apple-darwin') || t.contains('apple-ios'),

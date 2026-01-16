@@ -1,6 +1,8 @@
 import 'package:code_assets/code_assets.dart';
 
+// Maps Dart build config to Rust target triples and link modes.
 extension CodeConfigTargetTriple on CodeConfig {
+  // Derive Rust target triple from OS/arch.
   String get targetTriple {
     return switch ((targetOS, targetArchitecture)) {
       (OS.android, Architecture.arm64) => 'aarch64-linux-android',
@@ -24,6 +26,7 @@ extension CodeConfigTargetTriple on CodeConfig {
     };
   }
 
+  // Resolve link mode from code asset preferences.
   LinkMode get linkMode {
     return switch (linkModePreference) {
       LinkModePreference.dynamic ||

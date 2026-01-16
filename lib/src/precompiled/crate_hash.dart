@@ -7,7 +7,9 @@ import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
+// Computes a stable hash for crate inputs used in precompiled releases.
 class CrateHash {
+  // Compute (and optionally cache) the crate hash.
   static String compute(String manifestDir, {String? tempStorage}) {
     return CrateHash._(manifestDir: manifestDir, tempStorage: tempStorage)
         ._compute();
@@ -18,6 +20,7 @@ class CrateHash {
   final String manifestDir;
   final String? tempStorage;
 
+  // Collect all files that participate in the crate hash.
   static List<File> collectFiles(String manifestDir) {
     return CrateHash._(manifestDir: manifestDir, tempStorage: null)._getFiles();
   }
@@ -26,6 +29,7 @@ class CrateHash {
     final files = _getFiles();
     final tempStorage = this.tempStorage;
     if (tempStorage != null) {
+      // Quick hash keyed by file path + size + mtime to reuse cached full hash.
       final quickHash = _computeQuickHash(files);
       final quickHashFolder = Directory(path.join(tempStorage, 'crate_hash'));
       quickHashFolder.createSync(recursive: true);
@@ -40,6 +44,7 @@ class CrateHash {
     return _computeHash(files);
   }
 
+  // Fast hash over file metadata to key the cache.
   String _computeQuickHash(List<File> files) {
     final output = AccumulatorSink<Digest>();
     final input = sha256.startChunkedConversion(output);
@@ -58,6 +63,7 @@ class CrateHash {
     return base64Url.encode(output.events.single.bytes);
   }
 
+  // Deterministic content hash; normalizes pubspec precompiled config.
   String _computeHash(List<File> files) {
     final output = AccumulatorSink<Digest>();
     final input = sha256.startChunkedConversion(output);
@@ -73,6 +79,7 @@ class CrateHash {
       }
     }
 
+    // Include precompiled_binaries config so it invalidates releases.
     void addPrecompiledBinariesFromPubspec(File file) {
       if (!file.existsSync()) {
         return;
@@ -87,6 +94,7 @@ class CrateHash {
       input.add(utf8.encode(jsonEncode(normalized)));
     }
 
+    // Find pubspec.yaml at package root (one level up from crate).
     final rootDir = path.normalize(path.join(manifestDir, '../'));
     final pubspecFile = File(path.join(rootDir, 'pubspec.yaml'));
     addPrecompiledBinariesFromPubspec(pubspecFile);
@@ -109,6 +117,7 @@ class CrateHash {
     return b.toString();
   }
 
+  // Normalize maps/lists for deterministic serialization.
   Object? _normalizeYaml(Object? value) {
     if (value is YamlMap) {
       final keys = value.keys.map((key) => key.toString()).toList()..sort();
@@ -135,6 +144,7 @@ class CrateHash {
     return value;
   }
 
+  // Collect all source and manifest files that affect the build.
   List<File> _getFiles() {
     final src = Directory(path.join(manifestDir, 'src'));
     final files = src.existsSync()

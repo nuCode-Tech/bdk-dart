@@ -12,8 +12,10 @@ import 'options.dart';
 import 'target.dart';
 import 'util.dart';
 
+// Handles locating, downloading, and verifying precompiled artifacts.
 final _log = Logger('bdk_dart.artifacts_provider');
 
+// Infer the invoking package root from the build output directory.
 String? _invokerRootFromOutputDirectory(Uri outputDirectory) {
   final parts = path.split(path.fromUri(outputDirectory));
   final dartToolIndex = parts.lastIndexOf('.dart_tool');
@@ -23,6 +25,7 @@ String? _invokerRootFromOutputDirectory(Uri outputDirectory) {
   return path.joinAll(parts.take(dartToolIndex));
 }
 
+// Result of a successful download + verification.
 class DownloadedArtifact {
   DownloadedArtifact({required this.filePath, required this.dependencies});
 
@@ -30,6 +33,7 @@ class DownloadedArtifact {
   final List<Uri> dependencies;
 }
 
+// Resolves config, downloads binary + signature, and verifies them.
 class PrecompiledArtifactProvider {
   PrecompiledArtifactProvider({
     required this.input,
@@ -42,6 +46,7 @@ class PrecompiledArtifactProvider {
   final Directory crateDir;
 
   Future<DownloadedArtifact?> tryGetPrecompiledArtifact() async {
+    // Read precompiled_binaries configuration from pubspec.yaml.
     final pubspecOptions = PubspecOptions.load(
       packageRoot: path.fromUri(input.packageRoot),
       pluginConfigKey: 'bdk_dart',
@@ -51,6 +56,7 @@ class PrecompiledArtifactProvider {
       return null;
     }
 
+    // Allow invoker package to override mode for this build.
     final invokerRoot = _invokerRootFromOutputDirectory(input.outputDirectory);
     final invokerMode = invokerRoot == null
         ? null
@@ -94,10 +100,12 @@ class PrecompiledArtifactProvider {
     }
 
     final codeConfig = input.config.code;
+    // Derive crate name from Cargo.toml for file naming.
     final crateInfo = CrateInfo.load(crateDir.path);
     final targetTriple = codeConfig.targetTriple;
     final linkMode = codeConfig.linkMode;
 
+    // Write into the build output target directory.
     final outDir = path.join(path.fromUri(input.outputDirectory), 'target');
     final libFileName = codeConfig.targetOS
         .libraryFileName(crateInfo.packageName, linkMode)
@@ -111,6 +119,7 @@ class PrecompiledArtifactProvider {
 
     Directory(path.dirname(finalLibPath)).createSync(recursive: true);
 
+    // Crate hash keys the release tag and artifact path.
     final crateHash = CrateHash.compute(crateDir.path, tempStorage: outDir);
 
     final remoteFileName = '${targetTriple}_$libFileName';
@@ -145,6 +154,7 @@ class PrecompiledArtifactProvider {
       return null;
     }
 
+    // Verify binary integrity before writing it to disk.
     final ok = verify(
       precompiled.publicKey,
       binaryRes.bodyBytes,
@@ -158,6 +168,7 @@ class PrecompiledArtifactProvider {
     await writeBytesAtomically(File(finalLibPath), binaryRes.bodyBytes);
     _log.info('Verified and wrote precompiled binary to $finalLibPath');
 
+    // Dependencies track local crate inputs for rebuild invalidation.
     final deps = CrateHash.collectFiles(
       crateDir.path,
     ).map((f) => f.absolute.uri).toList(growable: false);
