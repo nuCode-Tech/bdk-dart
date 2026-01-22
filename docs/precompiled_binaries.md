@@ -7,7 +7,15 @@ This document describes how precompiled binaries are built, signed, and publishe
 - CI builds and uploads precompiled binaries via `.github/workflows/precompile_binaries.yml`.
 - Artifacts are tagged by the crate hash and uploaded to a GitHub release.
 - Each binary is signed with an Ed25519 key; the public key is embedded in `pubspec.yaml`.
-- The build hook tries to download a verified binary first and falls back to a local build if needed.
+- The build hook downloads verified binaries when appropriate (depending on mode configuration) and falls back to local builds if needed.
+
+## Mode behavior
+
+The `mode` configuration in `pubspec.yaml` controls fallback behavior:
+
+- `auto`: Uses a heuristic to prefer local builds for development. If the Rust toolchain (`rustup`) is detected, it disables precompiled binaries and builds locally. If no Rust toolchain is found, it uses precompiled binaries. This provides optimal developer experience while keeping end-user builds fast.
+- `always`: Attempts to use precompiled binaries and falls back to local builds if download/verification fails. Future versions may disable fallback entirely for this mode.
+- `never`: Always builds locally via the standard build hook, ignoring precompiled binaries.
 
 ## CI workflow
 
